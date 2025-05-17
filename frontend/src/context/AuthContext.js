@@ -38,11 +38,15 @@ export const AuthProvider = ({ children }) => {
   // Login function
   const login = (email, password) => {
     setError(null);
+    console.log('Attempting login with:', email, password);
+    console.log('Available users:', users);
     const user = users.find(u => u.email === email && u.password === password);
+    console.log('Found user:', user);
     
     if (user) {
       // Clone the user without the password
       const { password: _, ...userWithoutPassword } = user;
+      console.log('Setting current user:', userWithoutPassword);
       setCurrentUser(userWithoutPassword);
       localStorage.setItem('linkedinUser', JSON.stringify(userWithoutPassword));
       return true;
