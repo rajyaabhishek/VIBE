@@ -22,9 +22,14 @@ const LoginForm = () => {
       return;
     }
 
+    console.log('Submitting login with:', email, password);
+    
     // Attempt to login
     const success = login(email, password);
+    console.log('Login success:', success);
+    
     if (success) {
+      console.log('Navigating to home page');
       navigate('/');
     }
   };
