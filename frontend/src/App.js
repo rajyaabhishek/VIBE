@@ -46,6 +46,11 @@ function App() {
                   <MessagingPage />
                 </ProtectedRoute>
               } />
+              <Route path="/messaging/:conversationId" element={
+                <ProtectedRoute>
+                  <MessagingPage />
+                </ProtectedRoute>
+              } />
               <Route path="/network" element={
                 <ProtectedRoute>
                   <NetworkPage />
