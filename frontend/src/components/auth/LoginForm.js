@@ -53,6 +53,7 @@ const LoginForm = () => {
           </label>
           <input
             id="email"
+            name="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -68,6 +69,7 @@ const LoginForm = () => {
           <div className="relative">
             <input
               id="password"
+              name="password"
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
