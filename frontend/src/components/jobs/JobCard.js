@@ -1,118 +1,180 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaBookmark, FaRegBookmark, FaShareAlt } from 'react-icons/fa';
-import { formatRelativeTime } from '../../utils/formatters';
+import { format, formatDistanceToNow } from 'date-fns';
+import { 
+  FaBookmark, 
+  FaRegBookmark, 
+  FaShare, 
+  FaEllipsisH,
+  FaCheck,
+  FaMapMarkerAlt,
+  FaClock
+} from 'react-icons/fa';
 
-const JobCard = ({ job, showFull = false, onApply }) => {
-  const [saved, setSaved] = useState(false);
+const JobCard = ({ job, onApply }) => {
+  const [isSaved, setIsSaved] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   
-  const handleSave = () => {
-    setSaved(!saved);
+  const toggleSaved = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsSaved(!isSaved);
   };
   
-  const handleShare = () => {
-    console.log('Sharing job:', job.id);
-    // Would normally open a share dialog
+  const toggleMenu = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowMenu(!showMenu);
   };
   
-  const handleApply = () => {
-    if (onApply) {
-      onApply(job.id);
-    }
+  const handleApply = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onApply(job);
   };
   
-  // Format the posted date
-  const postedDate = formatRelativeTime(job.postedDate);
+  const postedDate = new Date(job.postedDate);
+  const postedTimeAgo = formatDistanceToNow(postedDate, { addSuffix: true });
   
   return (
-    <div className={`card ${showFull ? '' : 'hover:shadow-md transition-shadow'}`}>
-      <div className="p-4">
-        <div className="flex">
-          <div className="mr-3 flex-shrink-0">
-            <img 
-              src={job.logo} 
-              alt={job.company}
-              className="w-12 h-12 object-cover rounded"
-            />
-          </div>
-          
-          <div className="flex-1">
-            <Link 
-              to={`/jobs/${job.id}`}
-              className="font-medium text-black hover:text-linkedin-blue hover:underline"
-            >
-              {job.title}
-            </Link>
+    <Link to={`/jobs/${job.id}`} className="block">
+      <div className="card hover:shadow-md transition-shadow duration-200">
+        <div className="p-4 md:p-6">
+          <div className="flex items-start">
+            {/* Logo */}
+            <div className="flex-shrink-0 w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center overflow-hidden mr-4">
+              {job.logo ? (
+                <img 
+                  src={job.logo} 
+                  alt={`${job.company} logo`} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="text-xl font-bold text-gray-400">
+                  {job.company.charAt(0)}
+                </div>
+              )}
+            </div>
             
-            <p className="text-gray-700">{job.company}</p>
-            <p className="text-gray-500 text-sm">{job.location} {job.remote && '(Remote)'}</p>
-            
-            {job.easyApply && (
-              <span className="inline-block text-green-700 text-xs font-medium mt-1">
-                Easy Apply
-              </span>
-            )}
-            
-            {showFull ? (
-              <div className="mt-3">
-                <p className="font-medium">Salary: {job.salary}</p>
-                <p className="text-gray-600 mt-2">{job.description}</p>
+            {/* Job details */}
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold text-gray-900 hover:text-linkedin-blue">
+                {job.title}
+              </h3>
+              <p className="text-sm text-gray-600">{job.company}</p>
+              <div className="flex items-center text-xs text-gray-500 mt-1">
+                <FaMapMarkerAlt className="mr-1" />
+                <span>{job.location}</span>
+                {job.remote && (
+                  <span className="ml-2 bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                    Remote
+                  </span>
+                )}
+              </div>
+              
+              {job.salary && (
+                <p className="text-sm text-gray-600 mt-1">
+                  {job.salary}
+                </p>
+              )}
+              
+              <div className="flex items-center mt-2 text-xs text-gray-500">
+                <FaClock className="mr-1" />
+                <span>{postedTimeAgo}</span>
                 
-                <h3 className="font-medium mt-4 mb-2">Requirements:</h3>
-                <ul className="list-disc pl-5 text-gray-600">
-                  {job.requirements.map((req, index) => (
-                    <li key={index}>{req}</li>
-                  ))}
-                </ul>
+                {job.applicants && (
+                  <span className="ml-3">{job.applicants} applicants</span>
+                )}
               </div>
-            ) : (
-              <div className="mt-2 text-gray-500 text-sm flex items-center">
-                <span>{postedDate}</span>
-                <span className="mx-1">•</span>
-                <span>{job.applicants} applicants</span>
+              
+              {job.easyApply && (
+                <div className="mt-2">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <FaCheck className="mr-1" />
+                    Easy Apply
+                  </span>
+                </div>
+              )}
+            </div>
+            
+            {/* Action buttons */}
+            <div className="ml-4 flex-shrink-0 flex flex-col items-center space-y-2">
+              <button
+                onClick={toggleSaved}
+                className="text-gray-400 hover:text-linkedin-blue focus:outline-none"
+                aria-label={isSaved ? "Unsave job" : "Save job"}
+              >
+                {isSaved ? (
+                  <FaBookmark className="h-5 w-5" />
+                ) : (
+                  <FaRegBookmark className="h-5 w-5" />
+                )}
+              </button>
+              
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                className="text-gray-400 hover:text-linkedin-blue focus:outline-none"
+                aria-label="Share job"
+              >
+                <FaShare className="h-5 w-5" />
+              </button>
+              
+              <div className="relative">
+                <button
+                  onClick={toggleMenu}
+                  className="text-gray-400 hover:text-linkedin-blue focus:outline-none"
+                  aria-label="More options"
+                >
+                  <FaEllipsisH className="h-5 w-5" />
+                </button>
+                
+                {showMenu && (
+                  <div className="absolute right-0 top-8 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                    <div className="py-1" role="menu">
+                      <button
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        role="menuitem"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setShowMenu(false);
+                        }}
+                      >
+                        Not interested
+                      </button>
+                      <button
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        role="menuitem"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setShowMenu(false);
+                        }}
+                      >
+                        Report job
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
           
-          <div className="flex flex-col items-center">
-            <button 
-              onClick={handleSave}
-              className="text-gray-500 hover:text-gray-700 p-2"
+          {/* Apply button - only show on hover */}
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={handleApply}
+              className="btn-primary text-sm py-1.5"
             >
-              {saved ? <FaBookmark /> : <FaRegBookmark />}
-            </button>
-            <button 
-              onClick={handleShare}
-              className="text-gray-500 hover:text-gray-700 p-2 mt-1"
-            >
-              <FaShareAlt />
+              {job.easyApply ? "Easy Apply" : "Apply"}
             </button>
           </div>
         </div>
-        
-        {showFull && (
-          <div className="mt-5 flex space-x-3">
-            <button 
-              onClick={handleApply} 
-              className={`flex-1 py-2 px-4 ${
-                job.easyApply 
-                  ? 'bg-linkedin-blue hover:bg-linkedin-darkBlue text-white' 
-                  : 'border border-linkedin-blue text-linkedin-blue hover:bg-blue-50'
-              } rounded-full font-medium`}
-            >
-              {job.easyApply ? 'Easy Apply' : 'Apply Now'}
-            </button>
-            <button 
-              onClick={handleSave}
-              className="py-2 px-4 border border-gray-300 text-gray-700 rounded-full font-medium hover:bg-gray-50"
-            >
-              {saved ? 'Saved' : 'Save'}
-            </button>
-          </div>
-        )}
       </div>
-    </div>
+    </Link>
   );
 };
 
