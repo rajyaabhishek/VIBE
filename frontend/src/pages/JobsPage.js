@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import JobSearch from '../components/jobs/JobSearch';
 import JobFilters from '../components/jobs/JobFilters';
@@ -11,9 +11,21 @@ const JobsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   
-  const [selectedJob, setSelectedJob] = useState(id ? getJobById(parseInt(id)) : null);
+  const [selectedJob, setSelectedJob] = useState(null);
   const [filteredJobs, setFilteredJobs] = useState(jobs);
   const [showApplyModal, setShowApplyModal] = useState(false);
+  
+  // Set selectedJob based on URL param
+  useEffect(() => {
+    if (id) {
+      const job = getJobById(parseInt(id));
+      if (job) {
+        setSelectedJob(job);
+      }
+    } else {
+      setSelectedJob(null);
+    }
+  }, [id]);
   
   const handleSearch = (searchParams) => {
     // In a real app, we would search jobs from an API
@@ -156,7 +168,6 @@ const JobsPage = () => {
               <div 
                 key={job.id} 
                 onClick={() => {
-                  setSelectedJob(job);
                   navigate(`/jobs/${job.id}`);
                 }}
                 className="cursor-pointer"
