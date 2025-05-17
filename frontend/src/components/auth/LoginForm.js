@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { FaLinkedin, FaEye, FaEyeSlash } from 'react-icons/fa';
 
@@ -11,6 +11,10 @@ const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login, error } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get the previous location or default to home page
+  const from = location.state?.from?.pathname || '/';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,7 +23,8 @@ const LoginForm = () => {
     try {
       const success = await login(email, password);
       if (success) {
-        navigate('/');
+        // Navigate to the page they were trying to access
+        navigate(from, { replace: true });
       }
     } catch (err) {
       console.error('Login error:', err);
