@@ -1,58 +1,43 @@
-
-import { Link } from 'react-router-dom';
 import { FaLinkedin } from 'react-icons/fa';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   
+  const footerLinks = [
+    { title: 'About', url: '#' },
+    { title: 'Community Guidelines', url: '#' },
+    { title: 'Privacy & Terms', url: '#' },
+    { title: 'Sales Solutions', url: '#' },
+    { title: 'Safety Center', url: '#' },
+    { title: 'Accessibility', url: '#' },
+    { title: 'Careers', url: '#' },
+    { title: 'Ad Choices', url: '#' },
+    { title: 'Mobile', url: '#' },
+    { title: 'Talent Solutions', url: '#' },
+    { title: 'Marketing Solutions', url: '#' },
+    { title: 'Advertising', url: '#' },
+    { title: 'Small Business', url: '#' },
+  ];
+  
   return (
-    <footer className="bg-white py-6 mt-10 border-t border-gray-200">
+    <footer className="bg-white mt-8 py-6">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-4">
-          <div className="flex items-center mb-4 md:mb-0">
-            <FaLinkedin className="h-8 w-8 text-linkedin-blue mr-2" />
-            <span className="text-lg font-semibold">LinkedIn Clone</span>
-          </div>
-          <div className="flex flex-wrap justify-center">
-            <Link to="/" className="text-gray-600 hover:text-linkedin-blue mx-2 my-1 text-sm">
-              About
-            </Link>
-            <Link to="/" className="text-gray-600 hover:text-linkedin-blue mx-2 my-1 text-sm">
-              Accessibility
-            </Link>
-            <Link to="/" className="text-gray-600 hover:text-linkedin-blue mx-2 my-1 text-sm">
-              Talent Solutions
-            </Link>
-            <Link to="/" className="text-gray-600 hover:text-linkedin-blue mx-2 my-1 text-sm">
-              Community Guidelines
-            </Link>
-            <Link to="/" className="text-gray-600 hover:text-linkedin-blue mx-2 my-1 text-sm">
-              Careers
-            </Link>
-            <Link to="/" className="text-gray-600 hover:text-linkedin-blue mx-2 my-1 text-sm">
-              Marketing Solutions
-            </Link>
-          </div>
+        <div className="flex items-center justify-center mb-4">
+          <FaLinkedin className="h-8 w-8 text-linkedin-blue" />
         </div>
         
-        <div className="flex flex-col md:flex-row justify-between items-center">
-          <div className="text-sm text-gray-500 mb-2 md:mb-0">
-            &copy; {currentYear} LinkedIn Clone
-          </div>
-          <div className="flex space-x-4">
-            <Link to="/" className="text-gray-600 hover:text-linkedin-blue text-sm">
-              Privacy Policy
-            </Link>
-            <Link to="/" className="text-gray-600 hover:text-linkedin-blue text-sm">
-              User Agreement
-            </Link>
-            <Link to="/" className="text-gray-600 hover:text-linkedin-blue text-sm">
-              Cookie Policy
-            </Link>
-            <Link to="/" className="text-gray-600 hover:text-linkedin-blue text-sm">
-              Copyright Policy
-            </Link>
-          </div>
+        <div className="flex flex-wrap justify-center text-xs text-gray-600 mb-4">
+          {footerLinks.map((link, index) => (
+            <div key={index} className="px-2 py-1">
+              <a href={link.url} className="hover:text-linkedin-blue hover:underline">
+                {link.title}
+              </a>
+            </div>
+          ))}
+        </div>
+        
+        <div className="text-center text-xs text-gray-500">
+          <p>LinkedIn Corporation © {currentYear}</p>
         </div>
       </div>
     </footer>
