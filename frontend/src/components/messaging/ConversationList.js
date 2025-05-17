@@ -1,125 +1,176 @@
-
 import { useState } from 'react';
 import { FaSearch, FaEdit, FaEllipsisH } from 'react-icons/fa';
 import { conversations, getUserById, getMessagesByConversationId } from '../../utils/mockData';
-import { formatRelativeTime } from '../../utils/formatters';
-import { truncateText } from '../../utils/helpers';
+import { useAuth } from '../../context/AuthContext';
+import { formatDistanceToNow } from 'date-fns';
 
-const ConversationItem = ({ conversation, isActive, currentUserId, onClick }) => {
-  // Get the other user in the conversation
-  const otherUserId = conversation.participants.find(id => id !== currentUserId);
-  const otherUser = getUserById(otherUserId);
-  
-  // Get the last message
-  const messages = getMessagesByConversationId(conversation.id);
-  const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
-  
-  // Check if the conversation has unread messages
-  const hasUnread = lastMessage && lastMessage.receiverId === currentUserId && !lastMessage.read;
-  
-  return (
-    <div 
-      className={`flex items-center p-3 cursor-pointer hover:bg-gray-100 ${isActive ? 'bg-blue-50' : ''}`}
-      onClick={() => onClick(conversation)}
-    >
-      <div className="relative flex-shrink-0">
-        <img 
-          src={otherUser.profilePicture || "https://static.licdn.com/sc/h/1c5u578iilxfi4m4dvc4q810q"} 
-          alt={otherUser.name}
-          className="w-12 h-12 rounded-full object-cover" 
-        />
-        {hasUnread && (
-          <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
-        )}
-      </div>
-      
-      <div className="ml-3 flex-1 min-w-0">
-        <div className="flex justify-between items-center">
-          <h3 className={`font-medium truncate ${hasUnread ? 'text-black' : 'text-gray-700'}`}>
-            {otherUser.name}
-          </h3>
-          {lastMessage && (
-            <span className="text-xs text-gray-500">
-              {formatRelativeTime(lastMessage.timestamp)}
-            </span>
-          )}
-        </div>
-        
-        {lastMessage && (
-          <p className={`text-sm truncate ${hasUnread ? 'font-medium text-black' : 'text-gray-500'}`}>
-            {truncateText(lastMessage.content, 40)}
-          </p>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const ConversationList = ({ currentUserId, activeConversation, onSelectConversation }) => {
+const ConversationList = ({ selectedConversation, onSelectConversation }) => {
+  const { currentUser } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // Filter user's conversations
-  const userConversations = conversations.filter(conv => 
-    conv.participants.includes(currentUserId)
+  const [showMenu, setShowMenu] = useState(false);
+
+  // Filter conversations that the current user is part of
+  const userConversations = conversations.filter(conversation =>
+    conversation.participants.includes(currentUser.id)
   );
-  
-  // Filter by search query if any
-  const filteredConversations = searchQuery.trim() === '' 
-    ? userConversations 
-    : userConversations.filter(conv => {
-        const otherUserId = conv.participants.find(id => id !== currentUserId);
-        const otherUser = getUserById(otherUserId);
-        return otherUser.name.toLowerCase().includes(searchQuery.toLowerCase());
-      });
-  
-  // Sort conversations by last updated
-  const sortedConversations = [...filteredConversations].sort((a, b) => 
-    new Date(b.lastUpdated) - new Date(a.lastUpdated)
-  );
-  
+
+  // Filter by search query
+  const filteredConversations = userConversations.filter(conversation => {
+    const otherParticipantId = conversation.participants.find(id => id !== currentUser.id);
+    const otherUser = getUserById(otherParticipantId);
+    return otherUser.name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  // Get the last message for each conversation
+  const conversationsWithLastMessage = filteredConversations.map(conversation => {
+    const messages = getMessagesByConversationId(conversation.id);
+    const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
+    const otherParticipantId = conversation.participants.find(id => id !== currentUser.id);
+    const otherUser = getUserById(otherParticipantId);
+    
+    return {
+      ...conversation,
+      lastMessage,
+      otherUser
+    };
+  });
+
+  // Sort conversations by last message timestamp
+  const sortedConversations = [...conversationsWithLastMessage].sort((a, b) => {
+    if (!a.lastMessage) return 1;
+    if (!b.lastMessage) return -1;
+    return new Date(b.lastMessage.timestamp) - new Date(a.lastMessage.timestamp);
+  });
+
   return (
-    <div className="h-full flex flex-col border-r border-gray-200">
-      <div className="p-3 border-b border-gray-200">
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-xl font-bold">Messaging</h2>
+    <div className="border-r border-gray-200 h-full flex flex-col">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Messaging</h2>
           <div className="flex space-x-2">
-            <button className="text-gray-500 hover:text-gray-700 p-1">
-              <FaEllipsisH />
+            <button 
+              className="text-gray-500 hover:text-gray-700"
+              aria-label="New message"
+            >
+              <FaEdit className="h-5 w-5" />
             </button>
-            <button className="text-gray-500 hover:text-gray-700 p-1">
-              <FaEdit />
-            </button>
+            <div className="relative">
+              <button 
+                className="text-gray-500 hover:text-gray-700"
+                onClick={() => setShowMenu(!showMenu)}
+                aria-label="More options"
+              >
+                <FaEllipsisH className="h-5 w-5" />
+              </button>
+              {showMenu && (
+                <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+                  <div className="py-1" role="menu">
+                    <button
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setShowMenu(false)}
+                    >
+                      Mark all as read
+                    </button>
+                    <button
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setShowMenu(false)}
+                    >
+                      Manage messages
+                    </button>
+                    <button
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setShowMenu(false)}
+                    >
+                      Settings
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-        
-        <div className="relative">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-            <FaSearch className="text-gray-400" />
+
+        {/* Search */}
+        <div className="relative mt-3">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <FaSearch className="h-4 w-4 text-gray-400" />
           </div>
           <input
             type="text"
             placeholder="Search messages"
+            className="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-linkedin-blue text-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-full bg-gray-100 focus:bg-white focus:outline-none focus:ring-1 focus:ring-linkedin-blue"
           />
         </div>
       </div>
-      
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
+
+      {/* Conversation list */}
+      <div className="flex-1 overflow-y-auto">
         {sortedConversations.length > 0 ? (
-          sortedConversations.map(conversation => (
-            <ConversationItem 
-              key={conversation.id}
-              conversation={conversation}
-              isActive={activeConversation?.id === conversation.id}
-              currentUserId={currentUserId}
-              onClick={onSelectConversation}
-            />
-          ))
+          sortedConversations.map(conversation => {
+            const isSelected = selectedConversation?.id === conversation.id;
+            const isUnread = conversation.lastMessage && 
+                           conversation.lastMessage.receiverId === currentUser.id && 
+                           !conversation.lastMessage.read;
+            
+            return (
+              <div 
+                key={conversation.id}
+                onClick={() => onSelectConversation(conversation)}
+                className={`p-4 border-b border-gray-200 hover:bg-gray-50 cursor-pointer ${
+                  isSelected ? 'bg-gray-50' : ''
+                }`}
+              >
+                <div className="flex items-start">
+                  <div className="relative flex-shrink-0">
+                    <img 
+                      src={conversation.otherUser.profilePicture || "https://static.licdn.com/sc/h/1c5u578iilxfi4m4dvc4q810q"}
+                      alt={conversation.otherUser.name}
+                      className="h-12 w-12 rounded-full object-cover"
+                    />
+                    {conversation.otherUser.active && (
+                      <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-400 ring-2 ring-white"></span>
+                    )}
+                  </div>
+                  
+                  <div className="ml-3 flex-1 min-w-0">
+                    <div className="flex justify-between items-baseline">
+                      <h3 className={`text-sm font-medium truncate ${isUnread ? 'text-black font-semibold' : 'text-gray-900'}`}>
+                        {conversation.otherUser.name}
+                      </h3>
+                      {conversation.lastMessage && (
+                        <span className="text-xs text-gray-500">
+                          {formatDistanceToNow(new Date(conversation.lastMessage.timestamp), { addSuffix: false })}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {conversation.lastMessage ? (
+                      <p className={`text-sm truncate ${isUnread ? 'text-black font-semibold' : 'text-gray-500'}`}>
+                        {conversation.lastMessage.senderId === currentUser.id ? 'You: ' : ''}
+                        {conversation.lastMessage.content}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-gray-500 italic">
+                        No messages yet
+                      </p>
+                    )}
+                  </div>
+                  
+                  {isUnread && (
+                    <div className="ml-2 flex-shrink-0">
+                      <span className="inline-block h-2 w-2 rounded-full bg-blue-600"></span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })
         ) : (
-          <div className="p-4 text-center text-gray-500">
-            No conversations found
+          <div className="p-4 text-center">
+            <p className="text-gray-500">No conversations found</p>
           </div>
         )}
       </div>
