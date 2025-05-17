@@ -1,53 +1,62 @@
-import { useEffect } from "react";
-import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
-  return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
-};
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import Layout from './components/layout/Layout';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import HomePage from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import ProfilePage from './pages/ProfilePage';
+import JobsPage from './pages/JobsPage';
+import MessagingPage from './pages/MessagingPage';
+import NetworkPage from './pages/NetworkPage';
+import './App.css';
 
 function App() {
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <AuthProvider>
+      <Router>
+        <div className="App">
+          <Layout>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              
+              {/* Protected routes */}
+              <Route path="/profile/:id" element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              } />
+              <Route path="/jobs" element={
+                <ProtectedRoute>
+                  <JobsPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/jobs/:id" element={
+                <ProtectedRoute>
+                  <JobsPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/messaging" element={
+                <ProtectedRoute>
+                  <MessagingPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/network" element={
+                <ProtectedRoute>
+                  <NetworkPage />
+                </ProtectedRoute>
+              } />
+              
+              {/* Fallback route */}
+              <Route path="*" element={<HomePage />} />
+            </Routes>
+          </Layout>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 
