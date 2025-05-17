@@ -1,197 +1,189 @@
-
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import JobSearch from '../components/jobs/JobSearch';
-import JobFilters from '../components/jobs/JobFilters';
-import JobCard from '../components/jobs/JobCard';
-import EasyApplyModal from '../components/jobs/EasyApplyModal';
+import { useParams, useNavigate } from 'react-router-dom';
 import { jobs, getJobById } from '../utils/mockData';
+import JobCard from '../components/jobs/JobCard';
+import JobDetail from '../components/jobs/JobDetail';
+import JobSearch from '../components/jobs/JobSearch';
+import JobApplyModal from '../components/jobs/JobApplyModal';
+import SuccessModal from '../components/jobs/SuccessModal';
 
 const JobsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  
-  const [selectedJob, setSelectedJob] = useState(null);
   const [filteredJobs, setFilteredJobs] = useState(jobs);
+  const [selectedJob, setSelectedJob] = useState(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
-  
-  // Set selectedJob based on URL param
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [jobForSuccess, setJobForSuccess] = useState(null);
+  const [searchParams, setSearchParams] = useState({
+    keyword: '',
+    location: '',
+    remote: false,
+    easyApply: false,
+    datePosted: 'anytime',
+    experience: [],
+    salary: []
+  });
+
+  // Setup initial selected job if URL has an ID
   useEffect(() => {
     if (id) {
       const job = getJobById(parseInt(id));
       if (job) {
         setSelectedJob(job);
       }
-    } else {
-      setSelectedJob(null);
     }
   }, [id]);
-  
-  const handleSearch = (searchParams) => {
-    // In a real app, we would search jobs from an API
-    // For now, we'll just filter the mock data
-    const filtered = jobs.filter(job => {
-      const titleMatch = searchParams.title 
-        ? job.title.toLowerCase().includes(searchParams.title.toLowerCase()) ||
-          job.company.toLowerCase().includes(searchParams.title.toLowerCase())
-        : true;
-        
-      const locationMatch = searchParams.location
-        ? job.location.toLowerCase().includes(searchParams.location.toLowerCase())
-        : true;
-        
-      return titleMatch && locationMatch;
-    });
+
+  const handleSearch = (params) => {
+    setSearchParams(params);
     
-    setFilteredJobs(filtered);
-  };
-  
-  const handleFilterChange = (filters) => {
-    // In a real app, we would filter jobs from an API
-    console.log('Filters applied:', filters);
-  };
-  
-  const handleApply = (jobId) => {
-    const job = getJobById(jobId);
-    if (job && job.easyApply) {
-      setShowApplyModal(true);
-    } else {
-      // Redirect to external application
-      window.open('https://example.com/apply', '_blank');
+    // Filter jobs based on search parameters
+    let results = [...jobs];
+    
+    if (params.keyword) {
+      const keyword = params.keyword.toLowerCase();
+      results = results.filter(job => 
+        job.title.toLowerCase().includes(keyword) ||
+        job.company.toLowerCase().includes(keyword) ||
+        job.description.toLowerCase().includes(keyword)
+      );
     }
+    
+    if (params.location) {
+      const location = params.location.toLowerCase();
+      results = results.filter(job => 
+        job.location.toLowerCase().includes(location)
+      );
+    }
+    
+    if (params.remote) {
+      results = results.filter(job => job.remote);
+    }
+    
+    if (params.easyApply) {
+      results = results.filter(job => job.easyApply);
+    }
+    
+    if (params.datePosted !== 'anytime') {
+      const now = new Date();
+      const cutoffDate = new Date();
+      
+      switch (params.datePosted) {
+        case 'day':
+          cutoffDate.setDate(now.getDate() - 1);
+          break;
+        case 'week':
+          cutoffDate.setDate(now.getDate() - 7);
+          break;
+        case 'month':
+          cutoffDate.setMonth(now.getMonth() - 1);
+          break;
+        default:
+          break;
+      }
+      
+      results = results.filter(job => 
+        new Date(job.postedDate) >= cutoffDate
+      );
+    }
+    
+    if (params.experience.length > 0) {
+      // In a real app, jobs would have an experience level field
+      // This is a mock implementation
+      // results = results.filter(job => params.experience.includes(job.experienceLevel));
+    }
+    
+    if (params.salary.length > 0) {
+      // In a real app, we would parse the salary ranges
+      // This is a mock implementation
+      // results = results.filter(job => params.salary.some(range => job.salaryRange === range));
+    }
+    
+    setFilteredJobs(results);
   };
-  
-  // If a specific job is selected (from URL params), show job details
-  if (selectedJob) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3">
-            <button 
-              onClick={() => {
-                setSelectedJob(null);
-                navigate('/jobs');
-              }}
-              className="mb-4 flex items-center text-linkedin-blue hover:underline"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
-              </svg>
-              Back to job search
-            </button>
-            
-            <JobCard 
-              job={selectedJob} 
-              showFull={true} 
-              onApply={handleApply}
-            />
-            
-            {showApplyModal && (
-              <EasyApplyModal 
-                job={selectedJob}
-                onClose={() => setShowApplyModal(false)}
-              />
-            )}
-          </div>
-          
-          <div className="hidden lg:block">
-            <div className="card p-4 mb-4">
-              <h2 className="text-xl font-bold mb-3">Similar Jobs</h2>
-              
-              <div className="space-y-4">
-                {jobs
-                  .filter(job => job.id !== selectedJob.id && job.title.includes(selectedJob.title.split(' ')[0]))
-                  .slice(0, 3)
-                  .map(job => (
-                    <div key={job.id} className="border-b border-gray-200 pb-3 last:border-b-0 last:pb-0">
-                      <h3 className="font-medium hover:text-linkedin-blue cursor-pointer">
-                        {job.title}
-                      </h3>
-                      <p className="text-gray-600 text-sm">{job.company}</p>
-                      <p className="text-gray-500 text-xs">{job.location}</p>
-                    </div>
-                  ))
-                }
-              </div>
-            </div>
-            
-            <div className="card p-4">
-              <h2 className="text-lg font-bold mb-3">Job Seeker Guidance</h2>
-              <p className="text-gray-600 text-sm mb-3">
-                Recommended based on your activity
-              </p>
-              
-              <div className="space-y-3">
-                <div className="p-3 bg-gray-50 rounded">
-                  <h3 className="font-medium text-sm">I want to improve my resume</h3>
-                </div>
-                <div className="p-3 bg-gray-50 rounded">
-                  <h3 className="font-medium text-sm">I want to improve my LinkedIn profile</h3>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  // Show job search/listing page
+
+  const handleJobSelect = (job) => {
+    setSelectedJob(job);
+    navigate(`/jobs/${job.id}`);
+  };
+
+  const handleCloseJobDetail = () => {
+    setSelectedJob(null);
+    navigate('/jobs');
+  };
+
+  const handleApplyClick = (job) => {
+    setSelectedJob(job);
+    setShowApplyModal(true);
+  };
+
+  const handleApplicationSuccess = () => {
+    setShowApplyModal(false);
+    setJobForSuccess(selectedJob);
+    setShowSuccessModal(true);
+  };
+
+  const handleSuccessClose = () => {
+    setShowSuccessModal(false);
+    setJobForSuccess(null);
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left sidebar with filters */}
-        <div className="hidden lg:block">
-          <JobFilters onFilterChange={handleFilterChange} />
-        </div>
-        
-        {/* Main job list */}
-        <div className="lg:col-span-3">
-          <JobSearch onSearch={handleSearch} />
-          
-          <div className="mb-4 flex justify-between items-center">
-            <h1 className="text-xl font-bold">
-              {filteredJobs.length} jobs found
-            </h1>
-            
-            <div className="flex items-center">
-              <span className="text-gray-600 mr-2">Sort by:</span>
-              <select className="border-0 focus:ring-0 text-linkedin-blue font-medium">
-                <option>Most relevant</option>
-                <option>Most recent</option>
-              </select>
-            </div>
-          </div>
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-6">Find your next job</h1>
+      
+      <JobSearch onSearch={handleSearch} />
+      
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* Jobs list */}
+        <div className={`lg:col-span-${selectedJob ? '2' : '5'}`}>
+          <h2 className="text-lg font-semibold mb-4">{filteredJobs.length} jobs found</h2>
           
           <div className="space-y-4">
-            {filteredJobs.map(job => (
-              <div 
-                key={job.id} 
-                onClick={() => {
-                  navigate(`/jobs/${job.id}`);
-                }}
-                className="cursor-pointer"
-              >
-                <JobCard job={job} />
+            {filteredJobs.map((job) => (
+              <div key={job.id} onClick={() => handleJobSelect(job)}>
+                <JobCard job={job} onApply={handleApplyClick} />
               </div>
             ))}
             
             {filteredJobs.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-gray-400 mb-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-medium text-gray-900">No matching jobs found</h3>
-                <p className="text-gray-500 mt-1">
-                  Try adjusting your search criteria or filters
-                </p>
+              <div className="card p-8 text-center">
+                <h3 className="text-lg font-medium mb-2">No jobs found</h3>
+                <p className="text-gray-600">Try adjusting your search criteria</p>
               </div>
             )}
           </div>
         </div>
+        
+        {/* Job details */}
+        {selectedJob && (
+          <div className="hidden lg:block lg:col-span-3 h-screen sticky top-14 overflow-auto">
+            <JobDetail 
+              job={selectedJob} 
+              onClose={handleCloseJobDetail} 
+              onApply={handleApplyClick}
+            />
+          </div>
+        )}
       </div>
+      
+      {/* Apply Modal */}
+      {showApplyModal && selectedJob && (
+        <JobApplyModal 
+          job={selectedJob} 
+          onClose={() => setShowApplyModal(false)}
+          onSuccess={handleApplicationSuccess}
+        />
+      )}
+      
+      {/* Success Modal */}
+      {showSuccessModal && jobForSuccess && (
+        <SuccessModal 
+          job={jobForSuccess} 
+          onClose={handleSuccessClose}
+        />
+      )}
     </div>
   );
 };
