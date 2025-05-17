@@ -1,30 +1,23 @@
-
-import { useLocation } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
-import { useAuth } from '../../context/AuthContext';
+import { useLocation } from 'react-router-dom';
 
 const Layout = ({ children }) => {
-  const { currentUser } = useAuth();
   const location = useLocation();
-
-  // Hide footer on these paths
-  const hideFooterPaths = ['/messaging'];
-  const shouldShowFooter = !hideFooterPaths.includes(location.pathname);
-
-  // Check if this is the login, register, or home page without a user
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
-  const isHomeWithoutUser = location.pathname === '/' && !currentUser;
-
+  
+  // Check if current route is Login or Register
+  const isAuthPage = 
+    location.pathname === '/login' || 
+    location.pathname === '/register' ||
+    location.pathname === '/forgot-password';
+  
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
-      
-      <main className={`main-content flex-grow ${!isAuthPage && !isHomeWithoutUser ? 'bg-linkedin-light' : 'bg-white'}`}>
+      {!isAuthPage && <Navbar />}
+      <main className={`flex-grow ${!isAuthPage ? 'pt-14' : ''}`}>
         {children}
       </main>
-      
-      {shouldShowFooter && <Footer />}
+      {!isAuthPage && <Footer />}
     </div>
   );
 };
