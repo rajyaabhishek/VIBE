@@ -10,6 +10,7 @@ import ProfilePage from './pages/ProfilePage';
 import JobsPage from './pages/JobsPage';
 import MessagingPage from './pages/MessagingPage';
 import NetworkPage from './pages/NetworkPage';
+import PhilosophersPage from './pages/PhilosophersPage';
 import './App.css';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<HomePage />} />
+              <Route path="/philosophers" element={<PhilosophersPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />

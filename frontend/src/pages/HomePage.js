@@ -11,7 +11,13 @@ const HomePage = () => {
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-900">Welcome to LinkedIn Clone</h1>
           <p className="mt-4 text-xl text-gray-600">Please log in to access all features</p>
-          <div className="mt-8">
+          <div className="mt-8 space-x-4">
+            <Link 
+              to="/philosophers" 
+              className="btn-primary bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 px-8 py-3 text-base font-medium"
+            >
+              🏛️ Explore Philosophers
+            </Link>
             <Link 
               to="/login" 
               className="btn-primary px-8 py-3 text-base font-medium"
@@ -31,6 +37,7 @@ const HomePage = () => {
         <p className="text-gray-600">You're now logged in to the LinkedIn Clone.</p>
         
         <div className="mt-6 flex flex-wrap gap-4">
+          <Link to="/philosophers" className="btn-primary bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600">🏛️ Philosophers</Link>
           <Link to="/profile/1" className="btn-primary">View Profile</Link>
           <Link to="/jobs" className="btn-primary">Browse Jobs</Link>
           <Link to="/messaging" className="btn-primary">Messages</Link>
@@ -48,6 +55,11 @@ const HomePage = () => {
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h2 className="text-xl font-semibold mb-4">Quick Navigation</h2>
           <ul className="space-y-2">
+            <li>
+              <Link to="/philosophers" className="text-purple-600 hover:underline font-medium">
+                🏛️ Explore Great Philosophers
+              </Link>
+            </li>
             <li>
               <Link to="/jobs" className="text-linkedin-blue hover:underline">
                 Browse all jobs
