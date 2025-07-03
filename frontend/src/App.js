@@ -10,6 +10,8 @@ import ProfilePage from './pages/ProfilePage';
 import JobsPage from './pages/JobsPage';
 import MessagingPage from './pages/MessagingPage';
 import NetworkPage from './pages/NetworkPage';
+import CharactersPage from './pages/CharactersPage';
+import CharacterDetail from './components/CharacterDetail';
 import './App.css';
 
 function App() {
@@ -17,10 +19,11 @@ function App() {
     <AuthProvider>
       <Router>
         <div className="App">
-          <Layout>
-            <Routes>
+          <Routes>
               {/* Public routes */}
-              <Route path="/" element={<HomePage />} />
+              <Route path="/" element={<CharactersPage />} />
+              <Route path="/character/:id" element={<CharacterDetail />} />
+              <Route path="/home" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -60,7 +63,6 @@ function App() {
               {/* Fallback route */}
               <Route path="*" element={<HomePage />} />
             </Routes>
-          </Layout>
         </div>
       </Router>
     </AuthProvider>
